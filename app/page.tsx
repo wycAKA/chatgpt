@@ -1,101 +1,136 @@
-import Image from "next/image";
+"use client";
+import axios from "axios";
+import React, { useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
 
-export default function Home() {
+const Chat = () => {
+  const [prompt, setPrompt] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+
+  // 画像を削除する関数
+  const removeImage = (index: number) => {
+    const updatedImages = uploadedImages.filter((_, i) => i !== index);
+    setUploadedImages(updatedImages);
+  };
+
+  const generateAnswer = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const res = await axios.post("/api/chatgpt", { prompt }, { timeout: 15000 });
+      setAnswer(res.data.text);
+    } catch (e: any) {
+      if (e.code === "ECONNABORTED") {
+        setError("タイムアウト: 15秒以内に回答が返ってきませんでした。");
+      } else {
+        setError("エラーが発生しました。");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      setUploadedImages([...uploadedImages, ...acceptedFiles]);
+    }
+  }, [uploadedImages]);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: "image/*", // 画像ファイルのみを受け入れる
+    multiple: true, // 複数のファイルをアップロード可能にする
+  });
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-white"> {/* ページ全体を白背景に */}
+      <div className="mt-24 mx-auto my-16 min-w-1/2 max-w-2xl px-4 py-4 bg-white"> {/* 中央のコンテンツも白背景 */}
+        <div className="bg-gray-700 rounded-md md:flex md:items-center md:justify-between py-2 px-4">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-2xl font-bold leading-7 text-white">Art Info</h2>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* チャット入力欄 */}
+        <div className="px-4 py-8">
+          <div className="relative">
+            <textarea
+              id="question"
+              className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              placeholder="質問したいことを入力してください"
+              maxLength={500}
+              rows={5}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+          </div>
+          
+          {/* アップロードされた画像のプレビューをテキストエリアの下に表示 */}
+          <div className="mt-4 max-h-32 overflow-y-auto"> {/* 画像のプレビューエリアをスクロール可能に */}
+            {uploadedImages.length > 0 && (
+              <div className="pt-4 flex flex-wrap">
+                {uploadedImages.map((file, index) => (
+                  <div key={index} className="p-1 relative mx-2">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`Uploaded ${index}`}
+                      className="h-16 w-16 rounded-md shadow"
+                    />
+                    {/* 画像を削除するボタン */}
+                    <button
+                      onClick={() => removeImage(index)} // 削除するための関数を呼び出す
+                      className="absolute top-0 right-0 text-black bg-gray-500/20 rounded-full h-6 w-6 flex items-center justify-center shadow"
+                      style={{ transform: "translate(50%, -50%)" }} // 右上の少し外に配置
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="px-4">
+          {/* ドラッグアンドドロップエリア */}
+          <div {...getRootProps()} className="p-4 border-dashed border-2 border-gray-300 rounded-md text-center mb-4">
+            <input {...getInputProps()} />
+            <p className="text-gray-600">画像をドラッグ＆ドロップするか、クリックして選択してください（複数選択可）</p>
+          </div>
+        </div>
+
+        {/* 送信ボタン */}
+        <div className="flex justify-end mt-4">
+          <button
+            className="rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            disabled={isLoading || prompt.length === 0}
+            onClick={generateAnswer}
+          >
+            質問する
+          </button>
+        </div>
+
+        {/* エラーや回答の表示 */}
+        {isLoading ? (
+          <div className="font-medium leading-6 text-lg text-indigo-700 pb-2">読み込み中...</div>
+        ) : (
+          <>
+            {error && <div className="mt-4 text-red-500">{error}</div>}
+            {answer && (
+              <>
+                <div className="font-medium leading-6 text-lg text-gray-900 pb-2">回答：</div>
+                <p className="mt-2 text-gray-700">{answer}</p>
+              </>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default Chat;
